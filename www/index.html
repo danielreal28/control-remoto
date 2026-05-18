@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Universal Anyelo</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 15px; box-sizing: border-box; }
+        .remote-container { background: #1e293b; padding: 25px 20px; border-radius: 40px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); width: 100%; max-width: 310px; border: 3px solid #334155; }
+        
+        .config-box { display: flex; gap: 8px; margin-bottom: 25px; }
+        .config-box input { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #475569; background: #0f172a; color: white; text-align: center; font-size: 14px; outline: none; }
+        .config-box button { background: #0ea5e9; color: white; border: none; padding: 0 15px; border-radius: 12px; font-weight: bold; cursor: pointer; }
+
+        .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px; }
+        .btn { background: #334155; color: white; border: none; border-radius: 50%; width: 58px; height: 58px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: all 0.1s ease; -webkit-tap-highlight-color: transparent; }
+        .btn:active { transform: scale(0.92); background: #475569; }
+        .btn-power { background: #ef4444; color: white; width: 62px; height: 62px; font-size: 20px; }
+        .btn-pill { background: #475569; border-radius: 20px; width: 85px; height: 42px; font-size: 14px; }
+
+        .d-pad { background: #334155; width: 160px; height: 160px; border-radius: 50%; margin: 15px auto; position: relative; }
+        .d-btn { position: absolute; background: transparent; border: none; color: #94a3b8; font-size: 22px; cursor: pointer; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; }
+        .up { top: 6px; left: 60px; }
+        .down { bottom: 6px; left: 60px; }
+        .left { left: 6px; top: 60px; }
+        .right { right: 6px; top: 60px; }
+        .ok-btn { position: absolute; top: 48px; left: 48px; width: 64px; height: 64px; background: #1e293b; color: #38bdf8; border-radius: 50%; font-weight: bold; border: 2px solid #475569; }
+
+        .app-btn { width: 47%; height: 44px; border-radius: 12px; border: none; font-weight: bold; font-size: 14px; cursor: pointer; color: white; }
+        .netflix { background: #e50914; }
+        .youtube { background: #ff0000; }
+    </style>
+</head>
+<body>
+
+    <div class="remote-container">
+        <div class="config-box">
+            <input type="text" id="tvIp" value="192.168.1.50" placeholder="IP de tu Smart TV">
+            <button onclick="guardarIP()">Link</button>
+        </div>
+
+        <div class="row" style="justify-content: center;">
+            <button class="btn btn-power" onclick="sendCmd('Power')">⏻</button>
+        </div>
+
+        <div class="row">
+            <button class="btn btn-pill" onclick="sendCmd('Back')">Atrás</button>
+            <button class="btn btn-pill" onclick="sendCmd('Home')">Inicio</button>
+        </div>
+
+        <div class="d-pad">
+            <button class="d-btn up" onclick="sendCmd('Up')">▲</button>
+            <button class="d-btn left" onclick="sendCmd('Left')">◀</button>
+            <button class="ok-btn" onclick="sendCmd('Select')">OK</button>
+            <button class="d-btn right" onclick="sendCmd('Right')">▶</button>
+            <button class="d-btn down" onclick="sendCmd('Down')">▼</button>
+        </div>
+
+        <div class="row" style="margin-top: 25px;">
+            <div style="display:flex; flex-direction:column; align-items:center; background:#111827; border-radius:15px; padding:3px;">
+                <button class="btn" style="height:40px; width:50px; background:transparent;" onclick="sendCmd('VolumeUp')">+</button>
+                <span style="font-size:10px; color:#64748b; font-weight:bold; margin:4px 0;">VOL</span>
+                <button class="btn" style="height:40px; width:50px; background:transparent;" onclick="sendCmd('VolumeDown')">-</button>
+            </div>
+            
+            <button class="btn" style="border-radius:15px; width:52px; height:52px; background:#475569;" onclick="sendCmd('Mute')">🔇</button>
+
+            <div style="display:flex; flex-direction:column; align-items:center; background:#111827; border-radius:15px; padding:3px;">
+                <button class="btn" style="height:40px; width:50px; background:transparent;" onclick="sendCmd('ChannelUp')">▲</button>
+                <span style="font-size:10px; color:#64748b; font-weight:bold; margin:4px 0;">CH</span>
+                <button class="btn" style="height:40px; width:50px; background:transparent;" onclick="sendCmd('ChannelDown')">▼</button>
+            </div>
+        </div>
+
+        <div class="row" style="margin-top: 25px; margin-bottom:0;">
+            <button class="app-btn netflix" onclick="sendCmd('Lit_netflix')">Netflix</button>
+            <button class="app-btn youtube" onclick="sendCmd('Lit_youtube')">YouTube</button>
+        </div>
+    </div>
+
+    <script>
+        // Cargar IP guardada si existe
+        let tvIP = localStorage.getItem('tv_ip') || "192.168.1.50";
+        document.getElementById('tvIp').value = tvIP;
+
+        function vibrar() {
+            if (navigator.vibrate) navigator.vibrate(35);
+        }
+
+        function guardarIP() {
+            vibrar();
+            tvIP = document.getElementById('tvIp').value.trim();
+            localStorage.setItem('tv_ip', tvIP);
+            alert("IP de la TV guardada con éxito.");
+        }
+
+        function sendCmd(buttonName) {
+            vibrar();
+            // El celular le pega directo a la tele en la red local
+            fetch(`http://${tvIP}:8060/keypress/${buttonName}`, {
+                method: 'POST',
+                mode: 'no-cors' // Evita bloqueos de seguridad del navegador
+            }).catch(err => console.log("Comando enviado"));
+        }
+    </script>
+</body>
+</html>
